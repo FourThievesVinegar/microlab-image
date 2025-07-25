@@ -8,7 +8,6 @@
 - **config/** – bootloader and kernel-args overrides  
 - **overlays/** – rootfs overlay (scripts, notebooks, configs)  
 - **scripts/** – image assembly and provisioning scripts  
-- **Makefile** – helper targets  
 
 ## Prerequisites
 
@@ -29,7 +28,7 @@ cd microlab-image
 #    resulting image lives in build/raspios-microlab.img
 ```
 
-## Credentials
+## Raspberry Pi default credentials
 
 * User: thief
 * Password: vinegard

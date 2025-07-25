@@ -8,7 +8,7 @@
    docker build -f Dockerfile.builder -t microlab-image-builder .
    ```
 
-2. **Register ARM compiler**
+2. **Register ARM translator**
    ```bash
    docker run --rm --privileged tonistiigi/binfmt --install all
    ```
@@ -21,7 +21,7 @@
         bash -lc "cd /workspace && bash scripts/build-image.sh"   
    ```
 
-3. **Retrieve your image**
+4. **Retrieve your image**
    When the container finishes, you’ll find:
 
    ```
@@ -29,7 +29,3 @@
    ```
 
    ready to flash to an SD card.
-
-> **Tip**: If you’d rather limit privileges, you can replace `--privileged` with
-> `--cap-add=SYS_ADMIN --cap-add=NET_ADMIN -v /dev:/dev`
-> but you’ll need to rebuild the container only when build-time dependencies change.
