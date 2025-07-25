@@ -1,0 +1,11 @@
+[Unit]
+Description=Microlab Browser
+After=graphical.target
+
+[Service]
+Environment=DISPLAY=:0
+ExecStart=/opt/solderless-microlab/scripts/startBrowser.sh
+Restart=always
+
+[Install]
+WantedBy=default.target
