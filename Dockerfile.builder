@@ -16,6 +16,7 @@ RUN apt-get update && \
       util-linux \
       parted \
       kpartx \
+      e2fsprogs \
     && rm -rf /var/lib/apt/lists/*
 
 # Set up workspace

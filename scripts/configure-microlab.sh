@@ -29,15 +29,22 @@ echo "==> Installing Chromium browser..."
 apt-get install -y chromium-browser
 
 # Delegate Node/Yarn setup
-bash /root/tmp/install-node-yarn.sh
+bash /tmp/install-node-yarn.sh
 
 echo "==> Enabling systemd services..."
-# ensure systemd notices new unit files
-systemctl daemon-reload
+SYSTEMD_DIR="/etc/systemd/system"
+WANTS_DIR="${SYSTEMD_DIR}/multi-user.target.wants"
+mkdir -p "$WANTS_DIR"
 
-# enable services to start on boot
-systemctl enable microlab-backend.service
-systemctl enable microlab-frontend.service
-systemctl enable microlab-browser.service
+SERVICES=(
+  microlab-backend.service
+  microlab-frontend.service
+  microlab-browser.service
+)
+
+# Symlink each unit into multi-user.target.wants
+for svc in "${SERVICES[@]}"; do
+  ln -sf "${SYSTEMD_DIR}/${svc}" "${WANTS_DIR}/${svc}"
+done
 
 echo "==> Provisioning complete!"

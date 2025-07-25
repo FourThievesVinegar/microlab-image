@@ -33,9 +33,15 @@ echo "==> Decompressing .img.xz archive…"
 xz --decompress --keep --force --verbose "$BASE_IMG_XZ"
 BASE_IMG_RAW="${BASE_IMG_XZ%.img.xz}.img"
 
+echo "==> Expanding image file to 4 GiB"
+truncate -s 4G "$BASE_IMG_RAW"
+
 # 2. Setup loop devices & mount
 echo "==> Setting up loop device"
 LOOPDEV=$(losetup --show -f "$BASE_IMG_RAW")
+
+echo "==> Resizing partition 2 to fill the expanded image"
+parted --script "$LOOPDEV" resizepart 2 100%
 
 # ensure the kernel sees the partitions
 echo "==> Creating partition mappings with kpartx"
@@ -46,39 +52,45 @@ DEV_NAME=$(basename "$LOOPDEV")
 BOOT_PART="/dev/mapper/${DEV_NAME}p1"
 ROOT_PART="/dev/mapper/${DEV_NAME}p2"
 
+# 3. Resize the root filesystem to fill the partition**
+echo "==> Checking filesystem on $ROOT_PART"
+e2fsck -f -p "$ROOT_PART"
 
-# ensure our mount dirs exist
+echo "==> Resizing $ROOT_PART to use all available space"
+resize2fs "$ROOT_PART"
+
+# 4. Mount Raspberry Pi boot and root partitions
+echo "==> Mounting Raspberry Pi boot and root partitions..."
 mkdir -p "$MNT_DIR/boot" "$MNT_DIR/root"
-
-# mount the Pi's boot and root partitions
 mount "$BOOT_PART" "$MNT_DIR/boot"
 mount "$ROOT_PART" "$MNT_DIR/root"
 
-# 3. Apply overlays
+# 5. Apply overlays
 echo "==> Applying bootloader configs..."
 cp -r "$WORKDIR/config/"* "$MNT_DIR/boot/"
 
 echo "==> Overlaying root filesystem..."
 cp -r "$WORKDIR/overlays/rootfs-overlay/"* "$MNT_DIR/root"
 
-# 4. Chroot + provisioning
+# 6. Chroot + provisioning
 echo "==> Copying QEMU and provisioning script..."
 mkdir -p "$MNT_DIR/root/usr/bin"
 mkdir -p "$MNT_DIR/root/tmp"
 
 cp /usr/bin/qemu-arm-static "$MNT_DIR/root/usr/bin/"
 cp "$WORKDIR/scripts/configure-microlab.sh" "$MNT_DIR/root/tmp/"
+cp "$WORKDIR/scripts/install-node-yarn.sh"  "$MNT_DIR/root/tmp/"
 
 echo "==> Entering chroot to provision image..."
 chroot "$MNT_DIR/root" /bin/bash -lc "bash /tmp/configure-microlab.sh $MICROLAB_TAG"
 
-# 5. Teardown
+# 7. Teardown
 echo "==> Cleaning up mounts"
 umount "$MNT_DIR/boot" "$MNT_DIR/root"
 echo "==> Removing partition mappings"
 kpartx -d "$LOOPDEV"
 losetup -d "$LOOPDEV"
 
-# 6. Finalize
+# 8. Finalize
 mv "$BASE_IMG_RAW" "$OUTPUT_IMG"
 echo "==> Built image at: $OUTPUT_IMG"

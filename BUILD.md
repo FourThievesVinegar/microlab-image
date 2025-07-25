@@ -8,11 +8,15 @@
    docker build -f Dockerfile.builder -t microlab-image-builder .
    ```
 
-2. **Run the build inside Docker**
+2. **Register ARM compiler**
+   ```bash
+   docker run --rm --privileged tonistiigi/binfmt --install all
+   ```
+
+3. **Run the build inside Docker**
    This will mount your workspace into the container, create loop devices, mount partitions, and invoke the standard build script. The `--privileged` flag is required so the container can manage loopback devices and mounts.
 
    ```bash
-   docker run --rm --privileged tonistiigi/binfmt --install all
    docker run --rm --privileged -v "$(pwd)":/workspace microlab-image-builder \
         bash -lc "cd /workspace && bash scripts/build-image.sh"   
    ```
