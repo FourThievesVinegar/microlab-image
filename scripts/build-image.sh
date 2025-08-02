@@ -33,8 +33,8 @@ echo "==> Decompressing .img.xz archive…"
 xz --decompress --keep --force --verbose "$BASE_IMG_XZ"
 BASE_IMG_RAW="${BASE_IMG_XZ%.img.xz}.img"
 
-echo "==> Expanding image file to 4 GiB"
-truncate -s 4G "$BASE_IMG_RAW"
+echo "==> Expanding image file to 6 GiB"
+truncate -s 6G "$BASE_IMG_RAW"
 
 # 2. Setup loop devices & mount
 echo "==> Setting up loop device"
@@ -80,6 +80,7 @@ mkdir -p "$MNT_DIR/root/tmp"
 cp /usr/bin/qemu-arm-static "$MNT_DIR/root/usr/bin/"
 cp "$WORKDIR/scripts/configure-microlab.sh" "$MNT_DIR/root/tmp/"
 cp "$WORKDIR/scripts/install-node-yarn.sh"  "$MNT_DIR/root/tmp/"
+cp "$WORKDIR/scripts/compile-ui.sh"  "$MNT_DIR/root/tmp/"
 
 echo "==> Entering chroot to provision image..."
 chroot "$MNT_DIR/root" /bin/bash -lc "bash /tmp/configure-microlab.sh $MICROLAB_TAG"

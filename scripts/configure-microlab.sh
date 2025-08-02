@@ -31,6 +31,9 @@ apt-get install -y chromium-browser
 # Delegate Node/Yarn setup
 bash /tmp/install-node-yarn.sh
 
+# Delegate UI compilation
+bash /tmp/compile-ui.sh
+
 echo "==> Enabling systemd services..."
 SYSTEMD_DIR="/etc/systemd/system"
 WANTS_DIR="${SYSTEMD_DIR}/multi-user.target.wants"
