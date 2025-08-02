@@ -17,6 +17,7 @@ RUN apt-get update && \
       parted \
       kpartx \
       e2fsprogs \
+      vim-tiny \
     && rm -rf /var/lib/apt/lists/*
 
 # Set up workspace

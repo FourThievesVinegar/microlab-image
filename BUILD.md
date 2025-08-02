@@ -29,3 +29,21 @@
    ```
 
    ready to flash to an SD card.
+
+5. **(OPTIONAL) Troubleshoot the `microlab-image-builder` Docker Image**
+   ```shell
+   docker run --rm -it \ 
+     --privileged \   
+     -v "$(pwd)/build:/build:ro" \   
+     --entrypoint /bin/bash \   
+     microlab-image-builder
+   ```
+
+6. **(OPTIONAL) Inspect your image**
+   ```bash
+   docker run --rm -it \
+     --privileged \
+     -v "$(pwd)/build:/build:ro" \
+     microlab-image-builder \
+     /workspace/scripts/inspect-raspios-microlab.sh /build/raspios-microlab.img
+   ```

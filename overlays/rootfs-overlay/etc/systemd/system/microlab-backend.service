@@ -1,5 +1,6 @@
 [Unit]
 Description=Microlab Backend
+After=network.target
 
 [Service]
 ExecStart=/opt/solderless-microlab/scripts/startFlask.sh

@@ -79,6 +79,7 @@ mkdir -p "$MNT_DIR/root/tmp"
 
 cp /usr/bin/qemu-arm-static "$MNT_DIR/root/usr/bin/"
 cp "$WORKDIR/scripts/configure-microlab.sh" "$MNT_DIR/root/tmp/"
+cp "$WORKDIR/scripts/install-venv.sh"  "$MNT_DIR/root/tmp/"
 cp "$WORKDIR/scripts/install-node-yarn.sh"  "$MNT_DIR/root/tmp/"
 cp "$WORKDIR/scripts/compile-ui.sh"  "$MNT_DIR/root/tmp/"
 
