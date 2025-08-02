@@ -19,6 +19,9 @@ RUN apt-get update && \
       e2fsprogs \
     && rm -rf /var/lib/apt/lists/*
 
+# raspios-microlab.img inspector
+COPY --chmod=0755 inspect-image.sh /opt/inspect-image.sh
+
 # Set up workspace
 WORKDIR /workspace
 COPY . /workspace

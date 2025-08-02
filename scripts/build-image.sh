@@ -79,8 +79,11 @@ mkdir -p "$MNT_DIR/root/tmp"
 
 cp /usr/bin/qemu-arm-static "$MNT_DIR/root/usr/bin/"
 cp "$WORKDIR/scripts/configure-microlab.sh" "$MNT_DIR/root/tmp/"
+cp "$WORKDIR/scripts/install-venv.sh"  "$MNT_DIR/root/tmp/"
 cp "$WORKDIR/scripts/install-node-yarn.sh"  "$MNT_DIR/root/tmp/"
 cp "$WORKDIR/scripts/compile-ui.sh"  "$MNT_DIR/root/tmp/"
+
+COPY --chmod=0755 inspect-image.sh /opt/inspect-image.sh
 
 echo "==> Entering chroot to provision image..."
 chroot "$MNT_DIR/root" /bin/bash -lc "bash /tmp/configure-microlab.sh $MICROLAB_TAG"

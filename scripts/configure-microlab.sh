@@ -12,8 +12,11 @@ echo "==> Creating default user 'thief'..."
 if ! id thief &>/dev/null; then
   useradd -m -s /bin/bash thief
   echo 'thief:vinegard' | chpasswd
-  # grant sudo rights to *thief* user
+
+  # grant sudo and GPIO rights to *thief* user
+  # usermod -a ("append") -G ("supplementary groups")
   usermod -aG sudo thief
+  usermod -aG gpio thief
 fi
 
 echo "==> Cloning solderless-microlab into /opt..."
@@ -27,6 +30,9 @@ apt-get install -y python3 python3-pip
 
 echo "==> Installing Chromium browser..."
 apt-get install -y chromium-browser
+
+# Delegate Python Venv installation
+bash /tmp/install-venv.sh
 
 # Delegate Node/Yarn setup
 bash /tmp/install-node-yarn.sh
