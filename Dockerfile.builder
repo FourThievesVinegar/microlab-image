@@ -17,10 +17,8 @@ RUN apt-get update && \
       parted \
       kpartx \
       e2fsprogs \
+      vim-tiny \
     && rm -rf /var/lib/apt/lists/*
-
-# raspios-microlab.img inspector
-COPY --chmod=0755 inspect-image.sh /opt/inspect-image.sh
 
 # Set up workspace
 WORKDIR /workspace
