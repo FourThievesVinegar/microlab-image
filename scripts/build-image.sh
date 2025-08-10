@@ -83,10 +83,35 @@ cp "$WORKDIR/scripts/install-venv.sh"  "$MNT_DIR/root/tmp/"
 cp "$WORKDIR/scripts/install-node-yarn.sh"  "$MNT_DIR/root/tmp/"
 cp "$WORKDIR/scripts/compile-ui.sh"  "$MNT_DIR/root/tmp/"
 
+echo "==> Preparing chroot mount namespace (/proc, /sys, /dev)..."
+# Create targets (may already exist and be non-empty; that's fine)
+for d in proc sys dev dev/pts; do
+  mkdir -p "$MNT_DIR/root/$d"
+done
+# Optional: warn if /proc or /sys have contents; bind-mount will cover them
+for d in proc sys; do
+  if ! mountpoint -q "$MNT_DIR/root/$d" && [ -n "$(ls -A "$MNT_DIR/root/$d" 2>/dev/null)" ]; then
+    echo "WARN: $MNT_DIR/root/$d has contents; bind-mounting over it." >&2
+  fi
+done
+
+# Mount namespace pieces idempotently
+mountpoint -q "$MNT_DIR/root/proc"    || mount -t proc proc "$MNT_DIR/root/proc"
+mountpoint -q "$MNT_DIR/root/sys"     || mount --rbind /sys "$MNT_DIR/root/sys"
+mountpoint -q "$MNT_DIR/root/dev"     || mount --rbind /dev "$MNT_DIR/root/dev"
+mountpoint -q "$MNT_DIR/root/dev/pts" || mount --rbind /dev/pts "$MNT_DIR/root/dev/pts"
+
 echo "==> Entering chroot to provision image..."
 chroot "$MNT_DIR/root" /bin/bash -lc "bash /tmp/configure-microlab.sh $MICROLAB_TAG"
 
 # 7. Teardown
+echo "==> Cleaning up chroot mount namespace"
+# Unmount in reverse order; tolerate rbinds and busy handles
+umount -R "$MNT_DIR/root/dev/pts" 2>/dev/null || umount -l "$MNT_DIR/root/dev/pts" || true
+umount -R "$MNT_DIR/root/dev"     2>/dev/null || umount -l "$MNT_DIR/root/dev"     || true
+umount -R "$MNT_DIR/root/sys"     2>/dev/null || umount -l "$MNT_DIR/root/sys"     || true
+umount    "$MNT_DIR/root/proc"    2>/dev/null || umount -l "$MNT_DIR/root/proc"    || true
+
 echo "==> Cleaning up mounts"
 umount "$MNT_DIR/boot" "$MNT_DIR/root"
 echo "==> Removing partition mappings"
