@@ -1,6 +1,6 @@
 [Unit]
 Description=Microlab Browser
-After=graphical.target
+After=network.target
 
 [Service]
 Environment=DISPLAY=:0
