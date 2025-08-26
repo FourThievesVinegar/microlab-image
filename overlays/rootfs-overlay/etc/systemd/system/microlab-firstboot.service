@@ -1,0 +1,12 @@
+[Unit]
+Description=Microlab first boot setup
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/microlab-firstboot
+ConditionPathExists=/var/lib/microlab/firstboot.flag
+
+[Install]
+WantedBy=multi-user.target

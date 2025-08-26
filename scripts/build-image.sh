@@ -69,6 +69,20 @@ mount "$ROOT_PART" "$MNT_DIR/root"
 echo "==> Applying bootloader configs..."
 cp -r "$WORKDIR/config/"* "$MNT_DIR/boot/"
 
+# --- FIX: sanitize cmdline.txt so boot isn't hijacked by firstboot/kernel cmdline ---
+CMDLINE_FILE="$MNT_DIR/boot/cmdline.txt"
+if [ -f "$CMDLINE_FILE" ]; then
+  echo "==> Sanitizing cmdline.txt (remove firstboot/systemd.run overrides; ensure single line)"
+  # Remove Raspberry Pi Imager firstboot override, if present
+  sed -i -E 's#\s*init=/usr/lib/raspberrypi-sys-mods/firstboot##' "$CMDLINE_FILE"
+  # Remove any leftover systemd.run arguments that would generate kernel-command-line.service
+  sed -i -E 's#\s*systemd\.run=[^ ]+##g; s#\s*systemd\.run_[^=]+=[^ ]+##g' "$CMDLINE_FILE"
+  # Ensure cmdline is a single, space-delimited line with no leading/trailing spaces
+  tr '\n' ' ' < "$CMDLINE_FILE" | tr -s ' ' | sed -e 's/^ *//' -e 's/ *$//' > "$CMDLINE_FILE.tmp"
+  mv "$CMDLINE_FILE.tmp" "$CMDLINE_FILE"
+fi
+# --- end FIX ---
+
 echo "==> Overlaying root filesystem..."
 cp -r "$WORKDIR/overlays/rootfs-overlay/"* "$MNT_DIR/root"
 
