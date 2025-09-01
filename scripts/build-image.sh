@@ -16,7 +16,7 @@ BUILD_DIR="$WORKDIR/build"
 MNT_DIR="$BUILD_DIR/mnt"
 BASE_IMG_XZ="$BUILD_DIR/raspios-lite.img.xz"
 OUTPUT_IMG="$BUILD_DIR/raspios-microlab.img"
-RASPBIAN_URL="https://downloads.raspberrypi.org/raspios_lite_armhf_latest"
+RASPBIAN_URL="https://downloads.raspberrypi.org/raspios_lite_arm64_latest"
 MICROLAB_TAG="${1:-main}" # Use the first argument as the tag, default to "main"
 
 # 1. Prepare
@@ -24,11 +24,11 @@ mkdir -p "$BUILD_DIR"
 if [ -f "$BASE_IMG_XZ" ]; then
   echo "==> Using cached OS image: $BASE_IMG_XZ"
 else
-  echo "==> Downloading Raspberry Pi OS Lite..."
+  echo "==> Downloading Raspberry Pi OS..."
   curl -L "$RASPBIAN_URL" -o "$BASE_IMG_XZ"
 fi
 
-echo "==> Decompressing .img.xz archive…"
+echo "==> Decompressing .img.xz archive..."
 # requires xz-utils in the builder image
 xz --decompress --keep --force --verbose "$BASE_IMG_XZ"
 BASE_IMG_RAW="${BASE_IMG_XZ%.img.xz}.img"
@@ -69,6 +69,23 @@ mount "$ROOT_PART" "$MNT_DIR/root"
 echo "==> Applying bootloader configs..."
 cp -r "$WORKDIR/config/"* "$MNT_DIR/boot/"
 
+# --- FIX: sanitize cmdline.txt so boot isn't hijacked by firstboot/kernel cmdline ---
+CMDLINE_FILE="$MNT_DIR/boot/cmdline.txt"
+if [ -f "$CMDLINE_FILE" ]; then
+  echo "==> Sanitizing cmdline.txt (remove firstboot/systemd.run overrides; ensure single line)"
+  # Remove Raspberry Pi Imager firstboot override, if present
+  sed -i -E 's#\s*init=/usr/lib/raspberrypi-sys-mods/firstboot##' "$CMDLINE_FILE"
+  # Remove any leftover systemd.run arguments that would generate kernel-command-line.service
+  sed -i -E 's#\s*systemd\.run=[^ ]+##g; s#\s*systemd\.run_[^=]+=[^ ]+##g' "$CMDLINE_FILE"
+  # Ensure cmdline is a single, space-delimited line with no leading/trailing spaces
+  tr '\n' ' ' < "$CMDLINE_FILE" | tr -s ' ' | sed -e 's/^ *//' -e 's/ *$//' > "$CMDLINE_FILE.tmp"
+  mv "$CMDLINE_FILE.tmp" "$CMDLINE_FILE"
+fi
+# --- end FIX ---
+
+# --- enable SSH ---
+touch "$MNT_DIR/boot/ssh"
+
 echo "==> Overlaying root filesystem..."
 cp -r "$WORKDIR/overlays/rootfs-overlay/"* "$MNT_DIR/root"
 
@@ -77,11 +94,13 @@ echo "==> Copying QEMU and provisioning script..."
 mkdir -p "$MNT_DIR/root/usr/bin"
 mkdir -p "$MNT_DIR/root/tmp"
 
-cp /usr/bin/qemu-arm-static "$MNT_DIR/root/usr/bin/"
+cp /usr/bin/qemu-aarch64-static "$MNT_DIR/root/usr/bin/"
 cp "$WORKDIR/scripts/configure-microlab.sh" "$MNT_DIR/root/tmp/"
 cp "$WORKDIR/scripts/install-venv.sh"  "$MNT_DIR/root/tmp/"
+cp "$WORKDIR/scripts/install-x11-kiosk.sh"  "$MNT_DIR/root/tmp/"
 cp "$WORKDIR/scripts/install-node-yarn.sh"  "$MNT_DIR/root/tmp/"
 cp "$WORKDIR/scripts/compile-ui.sh"  "$MNT_DIR/root/tmp/"
+cp "$WORKDIR/scripts/block-first-boot-wizards.sh"  "$MNT_DIR/root/tmp/"
 
 echo "==> Preparing chroot mount namespace (/proc, /sys, /dev)..."
 # Create targets (may already exist and be non-empty; that's fine)

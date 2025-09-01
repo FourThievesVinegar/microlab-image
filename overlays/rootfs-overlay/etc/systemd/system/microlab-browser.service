@@ -1,11 +1,44 @@
 [Unit]
-Description=Microlab Browser
-After=network.target
+Description=Microlab Browser (X11 Kiosk)
+After=network-online.target systemd-logind.service getty@tty1.service
+Wants=network-online.target
+BindsTo=getty@tty1.service
+
+# OR conditions using the '|' prefix — if any exists, the unit may start
+ConditionPathExists=|/dev/fb0
+ConditionPathExists=|/sys/class/graphics/fb0
+ConditionPathExistsGlob=|/sys/class/backlight/*
+ConditionPathExistsGlob=|/sys/class/drm/*/status
+
+StartLimitIntervalSec=300
+StartLimitBurst=3
 
 [Service]
+Type=simple
+User=thief
+WorkingDirectory=/home/thief
+
+# Let systemd create /run/microlab-browser with correct owner/mode
+RuntimeDirectory=microlab-browser
+RuntimeDirectoryMode=0700
+
+# Use that as the runtime dir for X/Chromium
 Environment=DISPLAY=:0
-ExecStart=/opt/solderless-microlab/scripts/startBrowser.sh
-Restart=always
+Environment=XDG_RUNTIME_DIR=%t/microlab-browser
+
+# Attach to a real VT and open a PAM session so logind grants seat/DRM/input access
+StandardInput=tty
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+PAMName=login
+
+# Launch Xorg on :0 and run startBrowser script as *thief*
+# (no --no-sandbox needed because we're not root)
+ExecStart=/usr/bin/xinit /opt/solderless-microlab/scripts/startBrowser.sh -- :0 -nolisten tcp -s 0 -dpms -nocursor vt1
+Restart=on-failure
+RestartSec=5
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target
