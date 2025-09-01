@@ -54,6 +54,10 @@ bash /tmp/compile-ui.sh
 # Delegate configuring bootup settings
 bash /tmp/block-first-boot-wizards.sh
 
+echo "==> Enabling microlab-firstboot.service..."
+mkdir -p /var/lib/microlab/
+touch /var/lib/microlab/firstboot.flag
+
 echo "==> Enabling systemd services..."
 SYSTEMD_DIR="/etc/systemd/system"
 WANTS_DIR="${SYSTEMD_DIR}/multi-user.target.wants"
