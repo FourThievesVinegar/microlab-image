@@ -16,7 +16,7 @@ BUILD_DIR="$WORKDIR/build"
 MNT_DIR="$BUILD_DIR/mnt"
 BASE_IMG_XZ="$BUILD_DIR/raspios-lite.img.xz"
 OUTPUT_IMG="$BUILD_DIR/raspios-microlab.img"
-RASPBIAN_URL="https://downloads.raspberrypi.org/raspios_lite_armhf_latest"
+RASPBIAN_URL="https://downloads.raspberrypi.org/raspios_lite_arm64_latest"
 MICROLAB_TAG="${1:-main}" # Use the first argument as the tag, default to "main"
 
 # 1. Prepare
@@ -24,11 +24,11 @@ mkdir -p "$BUILD_DIR"
 if [ -f "$BASE_IMG_XZ" ]; then
   echo "==> Using cached OS image: $BASE_IMG_XZ"
 else
-  echo "==> Downloading Raspberry Pi OS Lite..."
+  echo "==> Downloading Raspberry Pi OS..."
   curl -L "$RASPBIAN_URL" -o "$BASE_IMG_XZ"
 fi
 
-echo "==> Decompressing .img.xz archive…"
+echo "==> Decompressing .img.xz archive..."
 # requires xz-utils in the builder image
 xz --decompress --keep --force --verbose "$BASE_IMG_XZ"
 BASE_IMG_RAW="${BASE_IMG_XZ%.img.xz}.img"
@@ -83,6 +83,9 @@ if [ -f "$CMDLINE_FILE" ]; then
 fi
 # --- end FIX ---
 
+# --- enable SSH ---
+touch "$MNT_DIR/boot/ssh"
+
 echo "==> Overlaying root filesystem..."
 cp -r "$WORKDIR/overlays/rootfs-overlay/"* "$MNT_DIR/root"
 
@@ -91,11 +94,13 @@ echo "==> Copying QEMU and provisioning script..."
 mkdir -p "$MNT_DIR/root/usr/bin"
 mkdir -p "$MNT_DIR/root/tmp"
 
-cp /usr/bin/qemu-arm-static "$MNT_DIR/root/usr/bin/"
+cp /usr/bin/qemu-aarch64-static "$MNT_DIR/root/usr/bin/"
 cp "$WORKDIR/scripts/configure-microlab.sh" "$MNT_DIR/root/tmp/"
 cp "$WORKDIR/scripts/install-venv.sh"  "$MNT_DIR/root/tmp/"
+cp "$WORKDIR/scripts/install-x11-kiosk.sh"  "$MNT_DIR/root/tmp/"
 cp "$WORKDIR/scripts/install-node-yarn.sh"  "$MNT_DIR/root/tmp/"
 cp "$WORKDIR/scripts/compile-ui.sh"  "$MNT_DIR/root/tmp/"
+cp "$WORKDIR/scripts/block-first-boot-wizards.sh"  "$MNT_DIR/root/tmp/"
 
 echo "==> Preparing chroot mount namespace (/proc, /sys, /dev)..."
 # Create targets (may already exist and be non-empty; that's fine)
