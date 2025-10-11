@@ -17,13 +17,15 @@
    This will mount your workspace into the container, create loop devices, mount partitions, and invoke the standard build script. The `--privileged` flag is required so the container can manage loopback devices and mounts.
 
    ```bash
+   # This will build the latest from the main branch
    docker run --rm --privileged -v "$(pwd)":/workspace microlab-image-builder \
         bash -lc "cd /workspace && bash scripts/build-image.sh"   
    ```
    
-To target a particular release tag, add it after the `build-image.sh` script
+   To target a particular release tag, add it after the `build-image.sh` script
 
    ```bash
+   # This will build from the v1.0.0 tag
    docker run --rm --privileged -v "$(pwd)":/workspace microlab-image-builder \
         bash -lc "cd /workspace && bash scripts/build-image.sh v1.0.0"   
    ```
