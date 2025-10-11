@@ -20,6 +20,13 @@
    docker run --rm --privileged -v "$(pwd)":/workspace microlab-image-builder \
         bash -lc "cd /workspace && bash scripts/build-image.sh"   
    ```
+   
+To target a particular release tag, add it after the `build-image.sh` script
+
+   ```bash
+   docker run --rm --privileged -v "$(pwd)":/workspace microlab-image-builder \
+        bash -lc "cd /workspace && bash scripts/build-image.sh v1.0.0"   
+   ```
 
 4. **Retrieve your image**
    When the container finishes, you’ll find:
