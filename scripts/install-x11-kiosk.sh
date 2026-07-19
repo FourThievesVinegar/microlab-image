@@ -13,6 +13,17 @@ apt-get install -y --no-install-recommends \
   xdotool \
   unclutter
 
+# udisks2 + gvfs give GIO's volume monitor (used by Chromium's native
+# file picker) visibility into removable USB drives, including
+# mounting them on click. dbus-bin provides dbus-run-session, used to
+# give the kiosk session a D-Bus bus to talk to udisks2 over (see
+# microlab-start-browser-session).
+apt-get install -y --no-install-recommends \
+  udisks2 \
+  gvfs gvfs-daemons \
+  dbus-bin \
+  matchbox-window-manager
+
 # The package name varies by distro/repo: Debian Bookworm's own repos only
 # ship 'chromium', while some Raspberry Pi OS repo configs still provide
 # the legacy 'chromium-browser' transitional package. Try the modern name
